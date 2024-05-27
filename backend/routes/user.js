@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { checkSession } = require('../middleware/session');
-
+const hashPassword = require('../utils/hashfunc')
 router.get('/get_user_info', checkSession, (req, res) => {
     const sql = 'SELECT * FROM register_info WHERE ACCID = ?';
     db.query(sql, [req.session.userId], (err, results) => {

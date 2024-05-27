@@ -2,18 +2,20 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { isAuthenticated, CheckPassword  } = require('../middleware/auth');
-
-router.post('/change_secretkey',CheckPassword, (req, res)=>{
+const { checkSession } = require('../middleware/session');
+const hashPassword = require('../utils/hashfunc')
+router.post('/change_secretkey',CheckPassword,async (req, res)=>{
 
     const userId = req.session.userId;
     const { password,secretkey } = req.body;
-
+    const hashedPassword = await hashPassword(password);
+    const hashedSecretkey = await hashPassword(secretkey);
     if (!secretkey) {
         return res.status(400).json({ message: 'Thiếu secret key.' });
     }
 
     const updateQuery = 'UPDATE Wallet SET secretkey = ? WHERE ACCID = ?';
-    db.query(updateQuery, [secretkey, userId], (error, results) => {
+    db.query(updateQuery, [hashedSecretkey, userId], (error, results) => {
         if (error) {
             console.error('Lỗi khi thực hiện truy vấn SQL:', error);
             return res.status(500).json({ message: 'Lỗi máy chủ nội bộ.' });
@@ -25,7 +27,7 @@ router.post('/change_secretkey',CheckPassword, (req, res)=>{
 
 } );
 
-router.post('/payment', (req, res) => {
+router.post('/payment',checkSession, (req, res) => {
     const { classID } = req.body;
     const accID = req.session.userId;
 
@@ -87,30 +89,34 @@ router.post('/payment', (req, res) => {
 });
 
 
-router.post('/insertTrans', async(req, res) => {
-    const {transID, accID, classID} = req.body;
-    const query1 = 'INSERT INTO Trans (transID, accID, classID) VALUES (?, ?, ?)';
-    try{
-        await db.promise().query(query1,[transID,accID,classID]);
-        console.log("nhap trans thanh cong");
-    }
-    catch(error){
-        console.log(error);
-        return res.status(400).json({message: 'Lỗi!'});
+router.post('/insertTrans', async (req, res) => {
+    const { transID, accID, classID } = req.body;
+    const userId = req.session.userId; // Lấy userId từ session
 
+    if (userId !== accID) {
+        return res.status(403).json({ message: 'Unauthorized: accID does not match userId' });
     }
 
-    const query2 = `UPDATE Class SET accID = '${accID}', isBooked = 1 WHERE classID = '${classID}'`;
+    try {
+        // Kiểm tra xem classID có isBooked = 1 và accID đó hay không
+        const [rows] = await db.promise().query(
+            'SELECT * FROM Class WHERE classID = ? AND accID = ? AND isBooked = 1',
+            [classID, accID]
+        );
 
-    try{
-        await db.promise().query(query2);
-        console.log("upate thanh cong");
-        return res.status(200).json({message: 'cap nhat lop thanh cong'});
-    }
-    catch(error){
-        console.log(error);
-        return res.status(400).json({message: 'Lỗi!'});
+        if (rows.length === 0) {
+            return res.status(400).json({ message: 'Class is not booked by this user or does not exist' });
+        }
 
+        // Chèn vào bảng Trans nếu tất cả các điều kiện đều đúng
+        const query1 = 'INSERT INTO Trans (transID, accID, classID) VALUES (?, ?, ?)';
+        await db.promise().query(query1, [transID, accID, classID]);
+        
+        console.log("Transaction inserted successfully");
+        return res.status(200).json({ message: 'Transaction inserted successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal Server Error' });
     }
 });
 
