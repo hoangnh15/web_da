@@ -81,8 +81,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 classID
             };
             console.log(info);
-            fetch('/api/momo', {
-                
+            fetch('/api/payment', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -92,20 +91,27 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(response => response.json())
             .then(result => {
                 console.log(result);
-                //alert(result.message);
-                window.location.href= result.message;
-
+                if (result.error) {
+                    alert(result.error);
+                    window.location.href = "./index.html";
+                } else {
+                    // Redirect to success page or show success message
+                    alert(result.message); // or display a success message in the UI
+                    window.location.href = result.message; // Uncomment if you want to redirect to the URL returned
+                    
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('Đã xảy ra lỗi khi gửi dữ liệu.');
-               
             });
         });
     } else {
         console.error('Button not found!');
     }
 });
+
+
 
 
 

@@ -11,6 +11,7 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const classRoutes = require('./routes/class');
 const momoRoutes = require('./routes/momo');
+const walletRoutes = require('./routes/wallet')
 
 const app = express();
 
@@ -22,10 +23,10 @@ app.use(cookieParser());
 app.use(session(sessionConfig));
 
 // Serve index.html on the root path
-const publicPath = '/workspaces/web_da'
+const publicPath = 'E:/Code/Clean_Web'
 app.use(express.static(publicPath))
 app.get('/', (req, res) => {
-    const indexPath = '/workspaces/web_da/index.html';
+    const indexPath = 'E:/Code/Clean_Web/index.html';
     res.sendFile(indexPath);
 });
 
@@ -33,6 +34,7 @@ app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', classRoutes);
 app.use('/api', momoRoutes);
+app.use('/api', walletRoutes);
 
 
 

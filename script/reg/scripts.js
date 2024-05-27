@@ -83,18 +83,19 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(response => response.json())
         .then(result => {
-            console.log(result);
+            
 
-            if (result.error) {
-                alert(result.error);
-                console.error(result.error);
+            
                 document.getElementById('loginEmail').value = '';
                 document.getElementById('loginPassword').value = '';
-            } else {
-                window.location.replace('./index.html')
-            }
+            
+                
+                alert("Đăng nhập thành công !!!");
+                window.location.replace('./index.html');
+            
         })
         .catch(error => {
+            alert("Đăng nhập thất bại !!!");
             console.error('Error:', error);
         });
     }
