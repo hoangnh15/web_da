@@ -22,10 +22,10 @@ app.use(cookieParser());
 app.use(session(sessionConfig));
 
 // Serve index.html on the root path
-const publicPath = 'E:/Code/Clean_Web'
+const publicPath = '/workspaces/web_da'
 app.use(express.static(publicPath))
 app.get('/', (req, res) => {
-    const indexPath = 'E:/Code/Clean_Web/index.html';
+    const indexPath = '/workspaces/web_da/index.html';
     res.sendFile(indexPath);
 });
 
